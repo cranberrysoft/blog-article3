@@ -1,0 +1,12 @@
+spark:
+  master: "local[4]"
+  checkpoint: "/tmp8"
+
+cassandra:
+  server: "localhost"
+  user: ""
+  password: ""
+
+kafka:
+ servers: "localhost:9092"
+ topic: "trap_advisor_events"

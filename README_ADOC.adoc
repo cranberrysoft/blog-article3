@@ -1,0 +1,66 @@
+:icons: font
+:sectnums:
+:sectanchors:
+
+=== Prerequisites
+TIP: Please check if you have all required tools installed on your computer
+
+* http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html[JDK 8^]
+* https://www.scala-lang.org/download/[Scala 2.11.12^]
+* http://www.scala-sbt.org/[SBT^]
+* https://www.docker.com/get-docker[Docker^]
+* https://docs.docker.com/compose/install/[Docker compose^]
+
+=== Run unit tests
+[source,bash]
+-----------------
+sbt test
+-----------------
+=== Run BigData solution
+
+TIP: I strongly encourage you to install docker plugin for https://www.jetbrains.com/help/idea/docker.html[IntelliJ]
+
+* Run docker containers with infrastructure
++
+[source,bash]
+-----------------
+docker-compose up -d
+-----------------
++
+* Create Scylla schema
++
+[source,bash]
+-----------------
+docker-compose exec cassandra cqlsh -f /schema.cql
+-----------------
+IMPORTANT: Give the Scylla DB some time to run before you start creating the database schema
++
+* Run Spark application
++
+[source,bash]
+-----------------
+sbt run
+-----------------
+* Send example messages to the Kafka
++
+[source,bash]
+-----------------
+send_messages_to_kafka.sh
+# For Windows
+send_messages_to_kafka.ps1
+-----------------
+* Go to http://localhost:4040 in order to see how Spark run the computations
+* Check Scylla tables
++
+[source,bash]
+-----------------
+docker-compose exec cassandra cqlsh -e 'select * from trap.sums'
+docker-compose exec cassandra cqlsh -e 'select * from trap.sums_counter'
+-----------------
+
+[dedication]
+== Inspired by
+CAUTION: Paul Leclercq https://github.com/polomarcus/Spark-Structured-Streaming-Examples
+[dedication]
+== Credits
+CAUTION: Mariusz Dubielecki dubielecki.mariusz@gmail.com http://cranberrysoft.com
