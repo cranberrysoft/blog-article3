@@ -23,7 +23,7 @@ object TrapAdvisorCounterApp extends StrictLogging{
       .getOrCreate()
 
     val trapAdvisorStream = TrapAdvisorStream.get(spark)
-                                .transform(combineToPairs)
+                                .transform(combineToPairsAndSum)
 
     //Get data from Kafka in the following format
 /*   +-----+
@@ -85,8 +85,9 @@ object TrapAdvisorCounterApp extends StrictLogging{
   }
 
 
-  private def combineToPairs(df: Dataset[Array[Int]]) ={ //return dataset with column value
-    import df.sparkSession.implicits._
-    df.map( _.combinations(2).toSeq.distinct.map(_.sum)).flatMap(_.iterator)
+  private def combineToPairsAndSum(ds: Dataset[Array[Int]]) ={ //return dataset with column value
+    import ds.sparkSession.implicits._
+    ds.map(_.combinations(2).toSeq.distinct.map(_.sum)) //Scala solution code
+      .flatMap(_.iterator)
   }
 }

@@ -8,11 +8,18 @@ public class FunctionalSolution implements Solution {
 
     @Override
     public long find(int[] a, int n) {
-        return Arrays.stream(a)
+        if (Arrays.stream(a).filter( number -> number< 0).count() > 0 ){
+            throw new IllegalArgumentException("Integers in the array must be greater or equal 0");
+        }
+
+        return Arrays.stream(a).distinct()
                 .filter(num -> num <= n)
-                .boxed().flatMap(i -> Arrays.stream(a).distinct().boxed().map(j -> new Integer[]{i, j}))
-                .filter(pair -> pair[0] + pair[1] == n)
-                .count() / 2; //we do not want to count duplicates like (1,2) (2,1)
+                .boxed().flatMap(
+                        i -> Arrays.stream(a).distinct().filter(num -> num <= n).boxed().map(j -> new Pair(i, j)
+                        ))
+                .distinct()
+                .filter(pair -> pair.isEqualToSum(n))
+                .count(); //we do not want to count duplicates like (1,2) (2,1)
     }
 
 }

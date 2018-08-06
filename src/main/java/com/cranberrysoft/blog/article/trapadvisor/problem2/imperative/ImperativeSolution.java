@@ -8,11 +8,22 @@ public class ImperativeSolution implements Solution {
 
     @Override
     public long find(int[] a, int n) {
+        if(ifContainsNegative(a)){
+            throw new IllegalArgumentException("Integers in the array must be greater or equal 0");
+        }
+
         long result = 0;
         for( Integer[] pair: distinct(combinationsOfTwo(lessEqThen(a,n)))){
             if(pair[0]+pair[1] == n) result++;
         }
         return result;
+    }
+
+    private boolean ifContainsNegative(int[]a){
+        for(int i: a){
+            if(i < 0) return true;
+        }
+        return false;
     }
 
     private static Integer[] lessEqThen(int a[], int n){

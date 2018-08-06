@@ -17,9 +17,9 @@ object Sol {
 
 class Sol extends Solution {
 
-
-
   override def find(a: Array[Int], n: Int): Long = {
+    if (a.dropWhile(_>=0).length > 0) throw new IllegalArgumentException("Integers in the array must be greater or equal 0");
+
     a
       .filter(_ <= n)
       .combinations(2).toSeq

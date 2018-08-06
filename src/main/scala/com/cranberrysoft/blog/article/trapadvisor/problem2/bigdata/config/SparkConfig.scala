@@ -15,5 +15,4 @@ object SparkConfig {
         .set("spark.cassandra.auth.password", configuration.cassandra.password)
         .set("spark.cassandra.output.consistency.level", "LOCAL_QUORUM")
         .set("spark.sql.shuffle.partitions","4")
-
 }

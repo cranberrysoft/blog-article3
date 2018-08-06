@@ -78,10 +78,22 @@ trait SolutionTest extends fixture.FlatSpec with GivenWhenThen {
     val array = Array[Int]()
 
     When("calling method")
-    val pairs = sol.find(array, 0)
+    val pairs = sol.find(array, 5)
 
     Then("return 0 pairs")
     assert(pairs === 0)
+
+  }
+
+
+  "array with negative numbers" should "throw IllegalArgumentException if the array contain a negative number" in { (sol: Solution) =>
+    Given("array with negative numbers")
+    val array = Array[Int](-1,5,5,4,7)
+
+    Then("calling method")
+    intercept[IllegalArgumentException] {
+      val pairs = sol.find(array, 5)
+    }
 
   }
 
