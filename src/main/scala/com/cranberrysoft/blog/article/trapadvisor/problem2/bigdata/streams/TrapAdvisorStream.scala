@@ -10,7 +10,7 @@ object TrapAdvisorStream {
   val schema = new StructType()
     .add("numbers", "array<int>", true)
 
-  def get(spark: SparkSession): Dataset[Int] = {
+  def get(spark: SparkSession): Dataset[Array[Int]] = {
     import spark.implicits._
 
     spark
@@ -25,12 +25,6 @@ object TrapAdvisorStream {
         col("key").cast("string"),
           from_json(col("value").cast("string"), schema).as("parsed_value")
       ).select("parsed_value.numbers").as[Array[Int]]
-      .transform(toSortedPairs)
-  }
-
-  private def toSortedPairs(df: Dataset[Array[Int]]) ={ //return dataset with column value
-    import df.sparkSession.implicits._
-    df.map( _.combinations(2).map(_.sum).toList).flatMap(_.iterator)
   }
 
 }

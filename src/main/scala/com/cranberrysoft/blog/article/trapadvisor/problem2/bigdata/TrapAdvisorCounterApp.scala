@@ -5,21 +5,26 @@ import com.cranberrysoft.blog.article.trapadvisor.problem2.bigdata.config.SparkC
 import com.cranberrysoft.blog.article.trapadvisor.problem2.bigdata.config.app.AppConfiguration
 import com.cranberrysoft.blog.article.trapadvisor.problem2.bigdata.streams.TrapAdvisorStream
 import com.typesafe.scalalogging.StrictLogging
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{Dataset, SparkSession}
 import org.apache.spark.sql.streaming.OutputMode
 
 object TrapAdvisorCounterApp extends StrictLogging{
   lazy val configuration = AppConfiguration()
 
   def main(args: Array[String]): Unit = {
-    System.setProperty("hadoop.home.dir", "C:\\Users\\Mariusz\\Downloads\\winutils-master\\winutils-master\\hadoop-2.8.3\\")
+
+    //Only for Windows
+    //Please download https://github.com/steveloughran/winutils and put to /tmp
+    System.setProperty("hadoop.home.dir", "C:\\tmp\\winutils-master\\hadoop-2.8.3\\")
 
     val spark = SparkSession
       .builder
       .config(SparkConfig.apply())
       .getOrCreate()
 
-    val trapAdvisorStream = TrapAdvisorStream.get(spark);
+    val trapAdvisorStream = TrapAdvisorStream.get(spark)
+                                .transform(combineToPairs)
+
     //Get data from Kafka in the following format
 /*   +-----+
 |value|
@@ -32,7 +37,6 @@ object TrapAdvisorCounterApp extends StrictLogging{
 +-----+
 */
 
-    //Our business logic
     //functional way
 /*    import spark.implicits._
     val sumStream =
@@ -44,7 +48,7 @@ object TrapAdvisorCounterApp extends StrictLogging{
     // Register the DataFrame as a SQL temporary view
     trapAdvisorStream.createOrReplaceTempView("sums")
     val sumStream =
-      spark.sql("SELECT value as sum, count(value) as count FROM sums WHERE value = 5 GROUP BY value") //business logic
+      spark.sql("SELECT value as sum, count(value) as count FROM sums WHERE value = 6 GROUP BY value") //business logic
 
     //sumStream example
 /*    +---+-----+
@@ -53,12 +57,12 @@ object TrapAdvisorCounterApp extends StrictLogging{
     |  5|   16|
       +---+-----+*/
 
-   //Append stream
+   //Complete stream
     sumStream
           .writeStream
-          .format("com.cranberrysoft.blog.article.trapadvisor.problem2.cassandra.sink.stream.CassandraSinkProvider")
+          .format("com.cranberrysoft.blog.article.trapadvisor.problem2.bigdata.cassandra.sink.stream.CassandraSinkProvider")
           .options(Map("table" -> "sums_counter", "keyspace" -> "trap"))
-          .outputMode(OutputMode.Update) //this mode is ignored in a downstream sink
+          .outputMode(OutputMode.Complete()) //UPDATE mode is not supported for this sink
           .queryName("KafkaToCassandraStreamSinkProvider")
           .option("checkpointLocation", configuration.spark.checkpoint)
           .start()
@@ -80,4 +84,9 @@ object TrapAdvisorCounterApp extends StrictLogging{
     spark.streams.awaitAnyTermination()
   }
 
+
+  private def combineToPairs(df: Dataset[Array[Int]]) ={ //return dataset with column value
+    import df.sparkSession.implicits._
+    df.map( _.combinations(2).toSeq.distinct.map(_.sum)).flatMap(_.iterator)
+  }
 }
